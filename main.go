@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,32 +12,65 @@ import (
 )
 
 func main() {
-	for {
-		fmt.Println("CSV-Based Database Manager")
-		fmt.Println(" 1. List CSV Files")
-		fmt.Println(" 2. Select CSV File")
-		fmt.Println(" 3. Create CSV File")
-		fmt.Println(" 4. Search Records")
-		fmt.Println(" 5. Exit")
-		fmt.Print("Choose an option: ")
+	selectedFile := flag.String("f", "", "Select CSV file")
+	listFlag := flag.Bool("list", false, "List CSV files")
+	createFlag := flag.Bool("create", false, "Create CSV file")
+	searchFlag := flag.Bool("search", false, "Search")
+	flag.Parse()
 
-		var choice int
-		fmt.Scanln(&choice)
-
-		switch choice {
-		case 1:
+	var headers []string
+	if len(os.Args) > 1 {
+		if *listFlag {
 			listCSVFiles()
-		case 2:
-			selectCSVFile()
-		case 3:
-			createNewCSV()
-		case 4:
-			searchAndDisplayRecords()
-		case 5:
-			os.Exit(0)
-		default:
-			fmt.Println("Invalid option.")
+			return
 		}
+
+		if *createFlag {
+			createNewCSV()
+			return
+		}
+
+		if *searchFlag && *selectedFile != "" {
+			var err error
+			headers, err = readHeaders(*selectedFile)
+			if err != nil {
+				fmt.Println("Error reading headers:", err)
+				return
+			}
+			searchRecord(*selectedFile, headers)
+			return
+		}
+
+		if *searchFlag && *selectedFile == "" {
+			searchAndDisplayRecords()
+			return
+		}
+	}
+
+	fmt.Println("CSV-Based Database Manager")
+	fmt.Println(" 1. List CSV Files")
+	fmt.Println(" 2. Select CSV File")
+	fmt.Println(" 3. Create CSV File")
+	fmt.Println(" 4. Search Records")
+	fmt.Println(" 5. Exit")
+	fmt.Print("Choose an option: ")
+
+	var choice int
+	fmt.Scanln(&choice)
+
+	switch choice {
+	case 1:
+		listCSVFiles()
+	case 2:
+		selectCSVFile()
+	case 3:
+		createNewCSV()
+	case 4:
+		searchAndDisplayRecords()
+	case 5:
+		os.Exit(0)
+	default:
+		fmt.Println("Invalid option.")
 	}
 }
 
