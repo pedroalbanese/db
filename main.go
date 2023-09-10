@@ -13,11 +13,11 @@ import (
 func main() {
 	for {
 		fmt.Println("CSV-Based Database Manager")
-		fmt.Println("1. List CSV Files")
-		fmt.Println("2. Select CSV File")
-		fmt.Println("3. Create CSV File")
-		fmt.Println("4. Search Records")
-		fmt.Println("5. Exit")
+		fmt.Println(" 1. List CSV Files")
+		fmt.Println(" 2. Select CSV File")
+		fmt.Println(" 3. Create CSV File")
+		fmt.Println(" 4. Search Records")
+		fmt.Println(" 5. Exit")
 		fmt.Print("Choose an option: ")
 
 		var choice int
