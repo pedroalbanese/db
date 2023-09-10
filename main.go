@@ -20,6 +20,17 @@ func main() {
 
 	var headers []string
 	if len(os.Args) > 1 {
+		if *listFlag && *selectedFile != "" {
+			var err error
+			headers, err = readHeaders(*selectedFile)
+			if err != nil {
+				fmt.Println("Error reading headers:", err)
+				return
+			}
+			listRecords2(*selectedFile, headers)
+			return
+		}
+
 		if *listFlag {
 			listCSVFiles()
 			return
