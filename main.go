@@ -67,6 +67,16 @@ func main() {
 					fmt.Printf("Value for ID '%d': %s\n", *idFlag, value)
 				}
 				os.Exit(0)
+			} else if *getFlag && *idFlag == 0 {
+				var err error
+				headers, err = readHeaders(*selectedFile)
+				if err != nil {
+					fmt.Println("Error reading headers:", err)
+				} else {
+					listRecords(*selectedFile, headers)
+					os.Exit(0)
+				}
+				os.Exit(0)
 			} else if *editFlag && *selectedFile != "" {
 				var err error
 				headers, err = readHeaders(*selectedFile)
@@ -121,9 +131,34 @@ func listCSVFiles() {
 	}
 
 	fmt.Println("CSV Files:")
+	fmt.Println(strings.Repeat("=", 58))
+	maxDigits := len(strconv.Itoa(len(files)))
+
 	for i, file := range files {
-		fmt.Printf(" %d. %s\n", i+1, file)
+		indexStr := fmt.Sprintf("%*d", maxDigits, i+1)
+		fmt.Printf(" %s. %s\n", indexStr, file)
 	}
+	fmt.Println(strings.Repeat("-", 58))
+}
+
+func listFiles(extension string) ([]string, error) {
+	var files []string
+
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), extension) {
+			files = append(files, path)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
 }
 
 func getValue(id int, file, column string) (string, error) {
@@ -185,7 +220,7 @@ func getValue(id int, file, column string) (string, error) {
 				value := row[i]
 				formattedRow.WriteString(fmt.Sprintf("%-*s : %s\n", maxKeyWidth, key, value))
 			}
-			return fmt.Sprintf("\n%s\n%s%s", strings.Repeat("=", 80), formattedRow.String(), strings.Repeat("-", 80)), nil
+			return fmt.Sprintf("\n%s\n%s%s", strings.Repeat("=", 58), formattedRow.String(), strings.Repeat("-", 58)), nil
 		}
 	}
 
@@ -205,9 +240,7 @@ func selectCSVFile() {
 	}
 
 	fmt.Println("Select a CSV file to manage:")
-	for i, file := range files {
-		fmt.Printf(" %d. %s\n", i+1, file)
-	}
+	listCSVFiles()
 
 	var fileChoice int
 	fmt.Print("Enter the number of the CSV file to manage: ")
@@ -307,7 +340,7 @@ func addRecord(selectedFile string, headers []string) {
 
 func listRecords(selectedFile string, headers []string) {
 	fmt.Println("List Records")
-	fmt.Println(strings.Repeat("=", 80))
+	fmt.Println(strings.Repeat("=", 58))
 
 	file, err := os.Open(selectedFile)
 	if err != nil {
@@ -344,13 +377,13 @@ func listRecords(selectedFile string, headers []string) {
 		for j := 1; j < len(headers); j++ {
 			fmt.Printf("%-*s : %s\n", maxHeaderWidth, headers[j], record[j])
 		}
-		fmt.Println(strings.Repeat("-", 80))
+		fmt.Println(strings.Repeat("-", 58))
 	}
 }
 
 func listRecords2(selectedFile string, headers []string) {
 	fmt.Println("List Records")
-	fmt.Println(strings.Repeat("=", 80))
+	fmt.Println(strings.Repeat("=", 58))
 
 	file, err := os.Open(selectedFile)
 	if err != nil {
@@ -399,7 +432,7 @@ func listRecords2(selectedFile string, headers []string) {
 		}
 		fmt.Println(recordRow)
 	}
-	fmt.Println(strings.Repeat("-", 80))
+	fmt.Println(strings.Repeat("-", 58))
 }
 
 func editRecord(selectedFile string, headers []string) {
@@ -515,7 +548,7 @@ func searchRecord(selectedFile string, headers []string) {
 		for j := 1; j < len(headers); j++ {
 			if strings.Contains(record[j], term) {
 				if !found {
-					fmt.Println(strings.Repeat("=", 80))
+					fmt.Println(strings.Repeat("=", 58))
 				}
 				maxHeaderWidth := 0
 				maxValueWidth := 0
@@ -531,7 +564,7 @@ func searchRecord(selectedFile string, headers []string) {
 				for k := 1; k < len(headers); k++ {
 					fmt.Printf("%-*s : %s\n", maxHeaderWidth, headers[k], record[k])
 				}
-				fmt.Println(strings.Repeat("-", 80))
+				fmt.Println(strings.Repeat("-", 58))
 				found = true
 				break
 			}
@@ -592,14 +625,14 @@ func searchAndDisplayRecords() {
 			for j, field := range record {
 				if strings.Contains(field, term) {
 					if !fileContainsTerm {
-						fmt.Println(strings.Repeat("=", 80))
+						fmt.Println(strings.Repeat("=", 58))
 						fmt.Printf("File   : %s\n", filePath)
-						fmt.Println(strings.Repeat("=", 80))
+						fmt.Println(strings.Repeat("=", 58))
 						fileContainsTerm = true
 					}
 					fmt.Printf("ID     : %s\n", record[0])
 					fmt.Printf("Column : %s\n", headers[j])
-					fmt.Println(strings.Repeat("-", 80))
+					fmt.Println(strings.Repeat("-", 58))
 				}
 			}
 		}
@@ -734,26 +767,6 @@ func renumberRecords(selectedFile string) {
 	writer.Flush()
 
 	fmt.Println("Records renumbered successfully!")
-}
-
-func listFiles(extension string) ([]string, error) {
-	var files []string
-
-	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() && strings.HasSuffix(info.Name(), extension) {
-			files = append(files, path)
-		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return files, nil
 }
 
 func readHeaders(selectedFile string) ([]string, error) {
