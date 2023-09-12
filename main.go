@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -15,7 +16,11 @@ func main() {
 	selectedFile := flag.String("f", "", "Select CSV file")
 	listFlag := flag.Bool("list", false, "List CSV files")
 	createFlag := flag.Bool("create", false, "Create CSV file")
-	searchFlag := flag.Bool("search", false, "Search")
+	searchFlag := flag.Bool("search", false, "Search entries in one or more CSV")
+	idFlag := flag.Int("id", 0, "ID (for get command)")
+	columnFlag := flag.String("column", "", "Column name (for get command)")
+	getFlag := flag.Bool("get", false, "Get value")
+	editFlag := flag.Bool("edit", false, "Edit entry")
 
 	var headers []string
 	for {
@@ -29,11 +34,15 @@ func main() {
 					fmt.Println("Error reading headers:", err)
 				} else {
 					listRecords2(*selectedFile, headers)
+					os.Exit(0)
 				}
+				os.Exit(0)
 			} else if *listFlag {
 				listCSVFiles()
+				os.Exit(0)
 			} else if *createFlag {
 				createNewCSV()
+				os.Exit(0)
 			} else if *searchFlag && *selectedFile != "" {
 				var err error
 				headers, err = readHeaders(*selectedFile)
@@ -41,9 +50,33 @@ func main() {
 					fmt.Println("Error reading headers:", err)
 				} else {
 					searchRecord(*selectedFile, headers)
+					os.Exit(0)
 				}
 			} else if *searchFlag && *selectedFile == "" {
 				searchAndDisplayRecords()
+				os.Exit(0)
+			} else if *getFlag && *idFlag > 0 {
+				value, err := getValue(*idFlag, *selectedFile, *columnFlag)
+				if err != nil {
+					fmt.Println("Error:", err)
+					return
+				}
+				if *columnFlag != "" {
+					fmt.Printf("Value for ID '%d' in column '%s': %s\n", *idFlag, *columnFlag, value)
+				} else {
+					fmt.Printf("Value for ID '%d': %s\n", *idFlag, value)
+				}
+				os.Exit(0)
+			} else if *editFlag && *selectedFile != "" {
+				var err error
+				headers, err = readHeaders(*selectedFile)
+				if err != nil {
+					fmt.Println("Error reading headers:", err)
+				} else {
+					editRecord(*selectedFile, headers)
+					os.Exit(0)
+				}
+				os.Exit(0)
 			}
 		} else {
 			fmt.Println("CSV-Based Database Manager")
@@ -91,6 +124,72 @@ func listCSVFiles() {
 	for i, file := range files {
 		fmt.Printf(" %d. %s\n", i+1, file)
 	}
+}
+
+func getValue(id int, file, column string) (string, error) {
+	csvFile, err := os.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer csvFile.Close()
+
+	reader := csv.NewReader(csvFile)
+
+	headers, err := reader.Read()
+	if err != nil {
+		return "", err
+	}
+
+	colIndex := -1
+	if column != "" {
+		for i, header := range headers {
+			if header == column {
+				colIndex = i
+				break
+			}
+		}
+
+		if colIndex == -1 {
+			return "", fmt.Errorf("Column '%s' not found in the CSV file", column)
+		}
+	}
+
+	for {
+		row, err := reader.Read()
+		if err == io.EOF {
+		} else if err != nil {
+			return "", err
+		}
+
+		rowID, err := strconv.Atoi(row[0])
+		if err != nil {
+			return "", err
+		}
+
+		if rowID == id {
+			if column != "" {
+				if colIndex < len(row) {
+					return row[colIndex], nil
+				}
+				return "", fmt.Errorf("Column '%s' not found in the row with ID %d", column, id)
+			}
+			var formattedRow strings.Builder
+			maxKeyWidth := 0
+			for i := 1; i < len(headers); i++ {
+				if len(headers[i]) > maxKeyWidth {
+					maxKeyWidth = len(headers[i])
+				}
+			}
+			for i := 1; i < len(headers); i++ {
+				key := headers[i]
+				value := row[i]
+				formattedRow.WriteString(fmt.Sprintf("%-*s : %s\n", maxKeyWidth, key, value))
+			}
+			return fmt.Sprintf("\n%s\n%s%s", strings.Repeat("=", 80), formattedRow.String(), strings.Repeat("-", 80)), nil
+		}
+	}
+
+	return "", fmt.Errorf("No row found with ID %d", id)
 }
 
 func selectCSVFile() {
@@ -208,6 +307,7 @@ func addRecord(selectedFile string, headers []string) {
 
 func listRecords(selectedFile string, headers []string) {
 	fmt.Println("List Records")
+	fmt.Println(strings.Repeat("=", 80))
 
 	file, err := os.Open(selectedFile)
 	if err != nil {
@@ -240,16 +340,17 @@ func listRecords(selectedFile string, headers []string) {
 			continue
 		}
 
-		fmt.Printf("Record %s:\n", record[0])
+		fmt.Printf("ID%*s : %s\n", maxHeaderWidth-2, "", record[0])
 		for j := 1; j < len(headers); j++ {
 			fmt.Printf("%-*s : %s\n", maxHeaderWidth, headers[j], record[j])
 		}
-		fmt.Println(strings.Repeat("-", 20))
+		fmt.Println(strings.Repeat("-", 80))
 	}
 }
 
 func listRecords2(selectedFile string, headers []string) {
 	fmt.Println("List Records")
+	fmt.Println(strings.Repeat("=", 80))
 
 	file, err := os.Open(selectedFile)
 	if err != nil {
@@ -298,6 +399,7 @@ func listRecords2(selectedFile string, headers []string) {
 		}
 		fmt.Println(recordRow)
 	}
+	fmt.Println(strings.Repeat("-", 80))
 }
 
 func editRecord(selectedFile string, headers []string) {
@@ -397,6 +499,14 @@ func searchRecord(selectedFile string, headers []string) {
 	}
 
 	found := false
+	maxHeaderWidth := 0
+
+	for _, header := range headers {
+		if len(header) > maxHeaderWidth {
+			maxHeaderWidth = len(header)
+		}
+	}
+
 	for i, record := range records {
 		if i == 0 {
 			continue
@@ -404,13 +514,25 @@ func searchRecord(selectedFile string, headers []string) {
 
 		for j := 1; j < len(headers); j++ {
 			if strings.Contains(record[j], term) {
-				fmt.Printf("Record %s:\n", record[0])
-				for k := 1; k < len(headers); k++ {
-					fmt.Printf("%s: %s\n", headers[k], record[k])
+				if !found {
+					fmt.Println(strings.Repeat("=", 80))
 				}
-				fmt.Println(strings.Repeat("-", 20))
+				maxHeaderWidth := 0
+				maxValueWidth := 0
+				for j := 0; j < len(headers); j++ {
+					if len(headers[j]) > maxHeaderWidth {
+						maxHeaderWidth = len(headers[j])
+					}
+					if len(record[j]) > maxValueWidth {
+						maxValueWidth = len(record[j])
+					}
+				}
+				fmt.Printf("%-*s : %-*s\n", maxHeaderWidth, "ID", maxValueWidth, record[0])
+				for k := 1; k < len(headers); k++ {
+					fmt.Printf("%-*s : %s\n", maxHeaderWidth, headers[k], record[k])
+				}
+				fmt.Println(strings.Repeat("-", 80))
 				found = true
-				break
 				break
 			}
 		}
@@ -470,12 +592,14 @@ func searchAndDisplayRecords() {
 			for j, field := range record {
 				if strings.Contains(field, term) {
 					if !fileContainsTerm {
-						fmt.Printf("File: %s\n", filePath)
+						fmt.Println(strings.Repeat("=", 80))
+						fmt.Printf("File   : %s\n", filePath)
+						fmt.Println(strings.Repeat("=", 80))
 						fileContainsTerm = true
 					}
-					fmt.Printf("ID: %s\n", record[0])
-					fmt.Printf("Column: %s\n", headers[j])
-					fmt.Println(strings.Repeat("-", 20))
+					fmt.Printf("ID     : %s\n", record[0])
+					fmt.Printf("Column : %s\n", headers[j])
+					fmt.Println(strings.Repeat("-", 80))
 				}
 			}
 		}
