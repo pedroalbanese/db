@@ -12,16 +12,18 @@ import (
 	"time"
 )
 
-func main() {
-	selectedFile := flag.String("f", "", "Select CSV file")
-	listFlag := flag.Bool("list", false, "List CSV files")
-	createFlag := flag.Bool("create", false, "Create CSV file")
-	searchFlag := flag.Bool("search", false, "Search entries in one or more CSV")
-	idFlag := flag.Int("id", 0, "ID (for get command)")
-	columnFlag := flag.String("column", "", "Column name (for get command)")
-	getFlag := flag.Bool("get", false, "Get value")
-	editFlag := flag.Bool("edit", false, "Edit entry")
+var (
+	selectedFile = flag.String("f", "", "Select CSV file")
+	listFlag     = flag.Bool("list", false, "List CSV files or entries in CSV")
+	createFlag   = flag.Bool("create", false, "Create CSV file")
+	searchFlag   = flag.Bool("search", false, "Search entries in one or more CSV")
+	idFlag       = flag.Int("id", 0, "ID (for get command)")
+	columnFlag   = flag.String("column", "", "Column name (for get command)")
+	getFlag      = flag.Bool("get", false, "Get entry or value")
+	editFlag     = flag.Bool("edit", false, "Edit entry")
+)
 
+func main() {
 	var headers []string
 	for {
 		flag.Parse()
