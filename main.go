@@ -13,20 +13,35 @@ import (
 )
 
 var (
-	selectedFile = flag.String("f", "", "Select CSV file")
-	listFlag     = flag.Bool("list", false, "List CSV files or entries in CSV")
-	createFlag   = flag.Bool("create", false, "Create CSV file")
-	searchFlag   = flag.Bool("search", false, "Search entries in one or more CSV")
-	idFlag       = flag.Int("id", 0, "ID (for get command)")
-	columnFlag   = flag.String("column", "", "Column name (for get command)")
-	getFlag      = flag.Bool("get", false, "Get entry or value")
-	editFlag     = flag.Bool("edit", false, "Edit entry")
+	addFlag        = flag.Bool("add", false, "Add entry to CSV")
+	columnFlag     = flag.String("column", "", "Column name (for get command)")
+	createFlag     = flag.Bool("create", false, "Create CSV file")
+	editFlag       = flag.Bool("edit", false, "Edit entry")
+	getFlag        = flag.Bool("get", false, "Get entry or value")
+	idFlag         = flag.Int("id", 0, "ID (for get command)")
+	listFlag       = flag.Bool("list", false, "List CSV files or entries in CSV")
+	searchFlag     = flag.Bool("search", false, "Search entries in one or more CSV")
+	selectedFile   = flag.String("f", "", "Select CSV file by its path")
+	selectedNumber = flag.Int("n", 0, "Select CSV file by its number")
 )
 
 func main() {
 	var headers []string
 	for {
 		flag.Parse()
+
+		if *selectedNumber > 0 {
+			files, err := listFiles(".csv")
+			if err != nil {
+				fmt.Println("Error listing CSV files:", err)
+				return
+			}
+			if *selectedNumber > len(files) {
+				fmt.Println("Error: File number is out of range.")
+				return
+			}
+			*selectedFile = files[*selectedNumber-1]
+		}
 
 		if len(os.Args) > 1 {
 			if *listFlag && *selectedFile != "" {
@@ -89,6 +104,15 @@ func main() {
 					os.Exit(0)
 				}
 				os.Exit(0)
+			} else if *addFlag && *selectedFile != "" {
+				var err error
+				headers, err = readHeaders(*selectedFile)
+				if err != nil {
+					fmt.Println("Error reading headers:", err)
+				} else {
+					addRecord(*selectedFile, headers)
+					os.Exit(0)
+				}
 			}
 		} else {
 			fmt.Println("CSV-Based Database Manager")
