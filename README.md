@@ -37,29 +37,29 @@ Usage of db:
 ### Shell
 Command-line CSV-based DB tool written in Go for managing CSV-based databases. It allows users to perform various operations on CSV files, including listing CSV files, creating new CSV files, adding records, editing records, listing records, searching records, and deleting records. Here's an overview of its functionality:
 
-  1.  List CSV Files: Lists all the CSV files in the current directory and its subdirectories.
+  1.  **List CSV Files**: Lists all the CSV files in the current directory and its subdirectories.
 
-  2.  Select CSV File: Allows the user to select a specific CSV file for further operations.
+  2.  **Select CSV File**: Allows the user to select a specific CSV file for further operations.
 
-  3.  Create CSV File: Helps in creating a new CSV file by specifying column headers.
+  3.  **Create CSV File**: Helps in creating a new CSV file by specifying column headers.
 
-  4.  Search Records: Searches for records containing a specific search term in one or more CSV files.
+  4.  **Search Records**: Searches for records containing a specific search term in one or more CSV files.
 
-  5.  Exit: Exits the program.
+  5.  **Exit**: Exits the program.
 
 Once a CSV file is selected, the user can perform the following operations on it:
 
-  1.  Add Record: Adds a new record to the selected CSV file, prompting the user to input values for each column.
+  1.  **Add Record**: Adds a new record to the selected CSV file, prompting the user to input values for each column.
 
-  2.  List Records: Lists all the records in the selected CSV file, displaying them one record per line.
+  2.  **List Records**: Lists all the records in the selected CSV file, displaying them one record per line.
 
-  3.  List Records as Table: Lists all the records in a tabular format, aligning columns for better readability.
+  3.  **List Records as Table**: Lists all the records in a tabular format, aligning columns for better readability.
 
-  4.  Search Record: Searches for a specific record by providing a search term.
+  4.  **Search Record**: Searches for a specific record by providing a search term.
 
-  5.  Edit Record: Allows the user to edit an existing record in the selected CSV file.
+  5.  **Edit Record**: Allows the user to edit an existing record in the selected CSV file.
 
-  6.  Delete Record: Deletes a specific record from the selected CSV file.
+  6.  **Delete Record**: Deletes a specific record from the selected CSV file.
 
 The tool also handles some features like automatically assigning IDs to records, handling date columns, and managing CSV files.
 
