@@ -35,7 +35,7 @@ Usage of db:
 ```
 
 ### Shell
-Command-line CSV-based DB tool written in Go for managing CSV-based databases. It allows users to perform various operations on CSV files, including listing CSV files, creating new CSV files, adding records, editing records, listing records, searching records, and deleting records. Here's an overview of its functionality:
+The shell allows users to perform various operations on CSV files, including listing CSV files, creating new CSV files, adding records, editing records, listing records, searching records, and deleting records. Here's an overview of its functionality:
 
   1.  **List CSV Files**: Lists all the CSV files in the current directory and its subdirectories.
 
