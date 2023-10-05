@@ -45,8 +45,6 @@ The shell allows users to perform various operations on CSV files, including lis
 
   4.  **Search Records**: Searches for records containing a specific search term in one or more CSV files.
 
-  5.  **Exit**: Exits the program.
-
 Once a CSV file is selected, the user can perform the following operations on it:
 
   1.  **Add Record**: Adds a new record to the selected CSV file, prompting the user to input values for each column.
